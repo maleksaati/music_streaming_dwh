@@ -5,6 +5,11 @@ import configparser
 config = configparser.ConfigParser()
 config.read('dwh.cfg')
 
+LOG_DATA = config.get('S3', 'LOG_DATA')
+ROLE_ARN = config.get('IAM_ROLE', 'ARN') 
+LOG_JSONPATH = config.get('S3', 'LOG_JSONPATH')
+SONG_DATA = config.get('S3', 'SONG_DATA')
+
 # DROP TABLES
 
 staging_events_table_drop = "DROP TABLE IF EXISTS staging_events"
@@ -18,9 +23,42 @@ time_table_drop = "DROP TABLE IF EXISTS time"
 # CREATE TABLES
 
 staging_events_table_create= ("""
+CREATE TABLE IF NOT EXISTS staging_events (
+    event_id bigint NOT NULL,
+    artist varchar,
+    auth varchar,
+    firstName varchar,
+    gender varchar,
+    itemInSession varchar,
+    lastName varchar,
+    length varchar,
+    level  varchar,
+    location varchar,
+    method varchar,
+    page  varchar,
+    registration varchar,
+    sessionId int SORTKEY DISTKEY,
+    song  varchar,
+    status int,
+    ts bigint,
+    userAgent varchar,
+    userId  int
+);
 """)
 
 staging_songs_table_create = ("""
+CREATE TABLE IF NOT EXISTS staging_songs (
+    num_songs int,
+    artist_id  varchar,
+    artist_latitude  varchar,
+    artist_longitude   varchar,
+    artist_location   varchar,
+    artist_name  varchar,
+    song_id   varchar,
+    title   varchar,
+    duration  float,
+    year int
+    );
 """)
 
 songplay_table_create = ("""
@@ -59,8 +97,8 @@ CREATE TABLE IF NOT EXISTS artists (
     artist_id varchar PRIMARY KEY SORTKEY , 
     name varchar, 
     location varchar, 
-    latitude float, 
-    longitude float) diststyle all;
+    latitude varchar, 
+    longitude varchar) diststyle all;
 """)
 
 time_table_create = ("""
@@ -77,10 +115,21 @@ CREATE TABLE IF NOT EXISTS time (
 # STAGING TABLES
 
 staging_events_copy = ("""
-""").format()
+    COPY staging_events FROM {}
+    credentials 'aws_iam_role={}'
+    format as json {}
+    STATUPDATE ON
+    region 'us-west-2';
+""").format(LOG_DATA, ROLE_ARN, LOG_JSONPATH)
 
 staging_songs_copy = ("""
-""").format()
+    COPY staging_songs FROM {}
+    credentials 'aws_iam_role={}'
+    format as json 'auto'
+    ACCEPTINVCHARS AS '^'
+    STATUPDATE ON
+    region 'us-west-2';
+""").format(SONG_DATA, ROLE_ARN)
 
 # FINAL TABLES
 
