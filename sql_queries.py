@@ -24,7 +24,6 @@ time_table_drop = "DROP TABLE IF EXISTS time"
 
 staging_events_table_create= ("""
 CREATE TABLE IF NOT EXISTS staging_events (
-    event_id bigint NOT NULL,
     artist varchar,
     auth varchar,
     firstName varchar,
@@ -63,8 +62,8 @@ CREATE TABLE IF NOT EXISTS staging_songs (
 
 songplay_table_create = ("""
 CREATE TABLE IF NOT EXISTS songplays (
-    songplay_id INTEGER PRIMARY KEY SORTKEY, 
-    start_time bigint NOT NULL, 
+    songplay_id INTEGER  SORTKEY, 
+    start_time TIMESTAMP NOT NULL, 
     user_id int NOT NULL DISTKEY, 
     level varchar, 
     song_id varchar, 
@@ -103,7 +102,7 @@ CREATE TABLE IF NOT EXISTS artists (
 
 time_table_create = ("""
 CREATE TABLE IF NOT EXISTS time (
-    start_time bigint PRIMARY KEY SORTKEY, 
+    start_time TIMESTAMP PRIMARY KEY SORTKEY, 
     hour int, 
     day int, 
     week int, 
@@ -135,7 +134,7 @@ staging_songs_copy = ("""
 songplay_table_insert = ("""
 INSERT INTO songplays (START_TIME, USER_ID, LEVEL, SONG_ID, ARTIST_ID, SESSION_ID, LOCATION, USER_AGENT)
     SELECT DISTINCT
-       TO_TIMESTAMP(ev.ts) as start_time,
+       TIMESTAMP 'epoch' + (ev.ts / 1000) * INTERVAL '1 second' as start_time,
                     ev.userId, ev.level, sng.song_id,  sng.artist_id,
                     ev.sessionId, ev.location, ev.userAgent
     FROM staging_songs sng
@@ -167,13 +166,13 @@ artist_table_insert = ("""
 time_table_insert = ("""
     INSERT INTO time
     SELECT DISTINCT
-        TO_TIMESTAMP(ts) as start_time,
+        TIMESTAMP 'epoch' + (ts / 1000) * INTERVAL '1 second' as start_time,
         EXTRACT(hour FROM start_time) AS hour,
         EXTRACT(day FROM start_time) AS day,
         EXTRACT(weeks FROM start_time) AS week,
         EXTRACT(month FROM start_time) AS month,
         EXTRACT(year FROM start_time) AS year,
-        to_char(start_time, 'Day') AS weekday
+        EXTRACT(weekday FROM start_time)  AS weekday
     FROM staging_events;
 """)
 
