@@ -8,9 +8,7 @@ In this project, we'll  build an ETL pipeline for a database hosted on Redshift.
 
  1.  load data from S3 to staging tables on Redshift  
  2.  execute SQL
-    statements that create the analytics tables from these
-
-staging tables.
+    statements that create the analytics tables from these staging tables.
 
 ### Project Datasets
 
