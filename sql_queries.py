@@ -134,18 +134,48 @@ staging_songs_copy = ("""
 # FINAL TABLES
 
 songplay_table_insert = ("""
+INSERT INTO songplays (START_TIME, USER_ID, LEVEL, SONG_ID, ARTIST_ID, SESSION_ID, LOCATION, USER_AGENT)
+    SELECT DISTINCT
+       TO_TIMESTAMP(ev.ts) as start_time,
+                    ev.userId, ev.level, sng.song_id,  sng.artist_id,
+                    ev.sessionId, ev.location, ev.userAgent
+    FROM staging_songs sng
+    INNER JOIN staging_events ev
+    ON (sng.title = ev.song AND ev.artist = sng.artist_name)
+    AND ev.page = 'NextSong';
 """)
 
 user_table_insert = ("""
+    INSERT INTO users
+    SELECT DISTINCT userId, firstName, lastName, gender, level
+    FROM staging_events
+    WHERE userId IS NOT NULL AND page = 'NextSong';
 """)
 
 song_table_insert = ("""
+    INSERT INTO songs
+    SELECT DISTINCT song_id, title, artist_id, year, duration
+    FROM staging_songs
+    WHERE song_id IS NOT NULL;
 """)
 
 artist_table_insert = ("""
+    INSERT INTO artists
+    SELECT DISTINCT artist_id, artist_name, artist_location, artist_latitude, artist_longitude
+    FROM staging_songs;
 """)
 
 time_table_insert = ("""
+    INSERT INTO time
+    SELECT DISTINCT
+        TO_TIMESTAMP(ts) as start_time,
+        EXTRACT(hour FROM start_time) AS hour,
+        EXTRACT(day FROM start_time) AS day,
+        EXTRACT(weeks FROM start_time) AS week,
+        EXTRACT(month FROM start_time) AS month,
+        EXTRACT(year FROM start_time) AS year,
+        to_char(start_time, 'Day') AS weekday
+    FROM staging_events;
 """)
 
 # QUERY LISTS
