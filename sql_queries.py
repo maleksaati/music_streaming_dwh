@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS staging_songs (
 
 songplay_table_create = ("""
 CREATE TABLE IF NOT EXISTS songplays (
-    songplay_id SERIAL PRIMARY KEY SORTKEY, 
+    songplay_id INTEGER PRIMARY KEY SORTKEY, 
     start_time bigint NOT NULL, 
     user_id int NOT NULL DISTKEY, 
     level varchar, 
@@ -115,18 +115,17 @@ CREATE TABLE IF NOT EXISTS time (
 # STAGING TABLES
 
 staging_events_copy = ("""
-    COPY staging_events FROM {}
+     COPY staging_songs FROM {}
     credentials 'aws_iam_role={}'
-    format as json {}
+    format as json 'auto'
     STATUPDATE ON
     region 'us-west-2';
-""").format(LOG_DATA, ROLE_ARN, LOG_JSONPATH)
+""").format(SONG_DATA, ROLE_ARN)
 
 staging_songs_copy = ("""
     COPY staging_songs FROM {}
     credentials 'aws_iam_role={}'
     format as json 'auto'
-    ACCEPTINVCHARS AS '^'
     STATUPDATE ON
     region 'us-west-2';
 """).format(SONG_DATA, ROLE_ARN)
