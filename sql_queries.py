@@ -115,12 +115,12 @@ CREATE TABLE IF NOT EXISTS time (
 # STAGING TABLES
 
 staging_events_copy = ("""
-     COPY staging_songs FROM {}
+    COPY staging_events FROM {}
     credentials 'aws_iam_role={}'
-    format as json 'auto'
+    format as json {} 
     STATUPDATE ON
-    region 'us-west-2';
-""").format(SONG_DATA, ROLE_ARN)
+    region 'us-west-2' 
+""").format(LOG_DATA, ROLE_ARN, LOG_JSONPATH)
 
 staging_songs_copy = ("""
     COPY staging_songs FROM {}
